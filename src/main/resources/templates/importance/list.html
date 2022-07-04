@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layout}">
+    <head>
+        <title th:text="#{importance.list.headline}" />
+    </head>
+    <body>
+        <div layout:fragment="content">
+            <div class="flex flex-wrap mb-6">
+                <h1 th:text="#{importance.list.headline}" class="grow text-3xl md:text-4xl font-medium mb-2" />
+                <div>
+                    <a th:href="@{/importances/add}" th:text="#{importance.list.createNew}" class="inline-block text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-300  focus:ring-4 rounded px-5 py-2" />
+                </div>
+            </div>
+            <div th:if="${importances.empty}" th:text="#{importance.list.empty}" />
+            <div th:if="${!importances.empty}" class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th th:text="#{importance.id.label}" scope="col" class="text-left p-2" />
+                            <th th:text="#{importance.name.label}" scope="col" class="text-left p-2" />
+                            <th><!-- --></th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-t-2 border-black">
+                        <tr th:each="importance : ${importances}" class="odd:bg-gray-100">
+                            <td th:text="${importance.id}" class="p-2" />
+                            <td th:text="${importance.name}" class="p-2" />
+                            <td class="p-2">
+                                <form th:action="@{/importances/delete/{id}(id=${importance.id})}" th:data-confirm-message="#{delete.confirm}" method="post" class="js-submit-confirm float-right">
+                                    <a th:href="@{/importances/edit/{id}(id=${importance.id})}" th:text="#{importance.list.edit}" class="inline-block text-white bg-sky-500 hover:bg-sky-600 focus:ring-sky-200focus:ring-3 rounded px-2.5 py-1.5 text-sm" />
+                                    <button th:text="#{importance.list.delete}" type="submit" class="inline-block text-white bg-red-500 hover:bg-red-600 focus:ring-red-200focus:ring-3 rounded px-2.5 py-1.5 text-sm" />
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
