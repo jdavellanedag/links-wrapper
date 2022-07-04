@@ -1,12 +1,15 @@
 package io.dploy.tools.link_wrapper.service;
 
 import io.dploy.tools.link_wrapper.domain.Category;
-import io.dploy.tools.link_wrapper.domain.Link;
 import io.dploy.tools.link_wrapper.model.CategoryDTO;
 import io.dploy.tools.link_wrapper.repos.CategoryRepository;
-import io.dploy.tools.link_wrapper.repos.LinkRepository;
+import io.dploy.tools.link_wrapper.util.WebUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.transaction.Transactional;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,12 +20,9 @@ import org.springframework.web.server.ResponseStatusException;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final LinkRepository linkRepository;
 
-    public CategoryService(final CategoryRepository categoryRepository,
-            final LinkRepository linkRepository) {
+    public CategoryService(final CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
-        this.linkRepository = linkRepository;
     }
 
     public List<CategoryDTO> findAll() {
@@ -53,21 +53,27 @@ public class CategoryService {
 
     public void delete(final Long id) {
         categoryRepository.deleteById(id);
-    }
 
+    }
     private CategoryDTO mapToDTO(final Category category, final CategoryDTO categoryDTO) {
         categoryDTO.setId(category.getId());
         categoryDTO.setName(category.getName());
-        categoryDTO.setLinkCategory(category.getLinkCategory() == null ? null : category.getLinkCategory().getId());
         return categoryDTO;
     }
 
     private Category mapToEntity(final CategoryDTO categoryDTO, final Category category) {
         category.setName(categoryDTO.getName());
-        final Link linkCategory = categoryDTO.getLinkCategory() == null ? null : linkRepository.findById(categoryDTO.getLinkCategory())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "linkCategory not found"));
-        category.setLinkCategory(linkCategory);
         return category;
+    }
+
+    @Transactional
+    public String getReferencedWarning(final Long id) {
+        final Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!category.getLinkCategory().isEmpty()) {
+            return WebUtils.getMessage("category.link.manyToMany.referenced", category.getLinkCategory().iterator().next().getId());
+        }
+        return null;
     }
 
 }

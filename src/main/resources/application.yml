@@ -8,11 +8,13 @@ spring:
       validation-query: SELECT 1
       validation-query-timeout: 30
   jpa:
+    show-sql: true
     hibernate:
       ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
+        format_sql: true
         jdbc:
           lob:
             non_contextual_creation: true

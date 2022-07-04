@@ -1,7 +1,9 @@
 package io.dploy.tools.link_wrapper.controller;
 
+import io.dploy.tools.link_wrapper.domain.Category;
 import io.dploy.tools.link_wrapper.domain.Importance;
 import io.dploy.tools.link_wrapper.model.LinkDTO;
+import io.dploy.tools.link_wrapper.repos.CategoryRepository;
 import io.dploy.tools.link_wrapper.repos.ImportanceRepository;
 import io.dploy.tools.link_wrapper.service.LinkService;
 import io.dploy.tools.link_wrapper.util.WebUtils;
@@ -14,33 +16,36 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 @Controller
-@RequestMapping("/links")
 public class LinkController {
 
     private final LinkService linkService;
     private final ImportanceRepository importanceRepository;
+    private final CategoryRepository categoryRepository;
 
     public LinkController(final LinkService linkService,
-            final ImportanceRepository importanceRepository) {
+        final CategoryRepository categoryRepository,
+        final ImportanceRepository importanceRepository) {
         this.linkService = linkService;
+        this.categoryRepository = categoryRepository;
         this.importanceRepository = importanceRepository;
     }
 
     @ModelAttribute
     public void prepareContext(final Model model) {
+        model.addAttribute("linkCategorysValues", categoryRepository.findAll().stream().collect(
+                Collectors.toMap(Category::getId, Category::getName)));
         model.addAttribute("linkImportanceValues", importanceRepository.findAll().stream().collect(
                 Collectors.toMap(Importance::getId, Importance::getName)));
     }
 
-    @GetMapping
-    public String list(final Model model) {
+    @GetMapping("/")
+    public String index(final Model model) {
         model.addAttribute("links", linkService.findAll());
-        return "link/list";
+        return "home/index";
     }
 
     @GetMapping("/add")
@@ -79,13 +84,8 @@ public class LinkController {
 
     @PostMapping("/delete/{id}")
     public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
-        final String referencedWarning = linkService.getReferencedWarning(id);
-        if (referencedWarning != null) {
-            redirectAttributes.addFlashAttribute(WebUtils.MSG_ERROR, referencedWarning);
-        } else {
-            linkService.delete(id);
-            redirectAttributes.addFlashAttribute(WebUtils.MSG_INFO, WebUtils.getMessage("link.delete.success"));
-        }
+        linkService.delete(id);
+        redirectAttributes.addFlashAttribute(WebUtils.MSG_INFO, WebUtils.getMessage("link.delete.success"));
         return "redirect:/links";
     }
 

@@ -1,11 +1,9 @@
 package io.dploy.tools.link_wrapper.controller;
 
-import io.dploy.tools.link_wrapper.domain.Link;
 import io.dploy.tools.link_wrapper.model.CategoryDTO;
 import io.dploy.tools.link_wrapper.repos.LinkRepository;
 import io.dploy.tools.link_wrapper.service.CategoryService;
 import io.dploy.tools.link_wrapper.util.WebUtils;
-import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,18 +21,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class CategoryController {
 
     private final CategoryService categoryService;
-    private final LinkRepository linkRepository;
+    
 
     public CategoryController(final CategoryService categoryService,
             final LinkRepository linkRepository) {
         this.categoryService = categoryService;
-        this.linkRepository = linkRepository;
-    }
-
-    @ModelAttribute
-    public void prepareContext(final Model model) {
-        model.addAttribute("linkCategoryValues", linkRepository.findAll().stream().collect(
-                Collectors.toMap(Link::getId, Link::getId)));
     }
 
     @GetMapping
@@ -79,8 +70,13 @@ public class CategoryController {
 
     @PostMapping("/delete/{id}")
     public String delete(@PathVariable final Long id, final RedirectAttributes redirectAttributes) {
-        categoryService.delete(id);
-        redirectAttributes.addFlashAttribute(WebUtils.MSG_INFO, WebUtils.getMessage("category.delete.success"));
+        final String referencedWarning = categoryService.getReferencedWarning(id);
+        if (referencedWarning != null) {
+            redirectAttributes.addFlashAttribute(WebUtils.MSG_ERROR, referencedWarning);
+        } else {
+            categoryService.delete(id);
+            redirectAttributes.addFlashAttribute(WebUtils.MSG_INFO, WebUtils.getMessage("category.delete.success"));
+        }
         return "redirect:/categorys";
     }
 

@@ -1,5 +1,7 @@
 package io.dploy.tools.link_wrapper.model;
 
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,5 +23,7 @@ public class LinkDTO {
 
     @NotNull
     private Long linkImportance;
+
+    private List<Long> linkCategorys;
 
 }
